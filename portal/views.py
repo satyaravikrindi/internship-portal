@@ -54,28 +54,49 @@ class Login(APIView):
         
        
     
-class AdminDashboard(APIView):
+class Dashboard(APIView):
     authentication_classes = [PortalUserJWTAuthentication]
     permission_classes = [IsAuthenticated]
-    
 
     def get(self, request):
-        portal_user = PortalUser.objects.get(id=request.user.id)
+        user = request.user
 
-        if portal_user.role != 'USER_ADMIN':
-            return Response({"error": "Access denied"})
+        if user.role == 'USER_ADMIN':
 
-        tasks = Tasks.objects.filter(assigned_by = portal_user.id)
+            tasks = Tasks.objects.select_related('assigned_by').filter(assigned_by=user)
 
-        total_tasks = tasks.count()
-        completed_tasks= tasks.filter(task_status = 'TASK_STATUS_COMPLETED').count()
-        pending_tasks = total_tasks - completed_tasks
+            total_tasks = tasks.count()
+            completed_tasks = tasks.filter(task_status='TASK_STATUS_COMPLETED').count()
+            pending_tasks = total_tasks - completed_tasks
 
-        return Response({
-            'total_tasks_assigned':total_tasks,
-            'pending_tasks':pending_tasks,
-            'completed_tasks':completed_tasks
-        })
+            return Response({
+                'role': 'admin',
+                'total_tasks_assigned': total_tasks,
+                'pending_tasks': pending_tasks,
+                'completed_tasks': completed_tasks
+            })
+
+        
+        elif user.role == 'USER_INTERN':
+
+            tasks = Tasks.objects.select_related('assigned_to').filter(assigned_to=user)
+
+            data = [
+                {
+                    "id": task.id,
+                    "description": task.task_description,
+                    "status": task.task_status
+                }
+                for task in tasks
+            ]
+
+            return Response({
+                'role': 'intern',
+                'tasks': data
+            })
+
+        
+        return Response({"error": "Invalid role"}, status=400)
     
 class CreateTask(APIView):
     authentication_classes = [PortalUserJWTAuthentication]
@@ -111,29 +132,6 @@ class CreateTask(APIView):
 
 
     
-class InternDashboard(APIView):
-    authentication_classes = [PortalUserJWTAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        user = request.user
-
-        if user.role != 'USER_INTERN':
-            return Response({"error": "Access denied"}, status=403)
-
-        tasks = Tasks.objects.filter(assigned_to=user)
-
-        data = [
-            {
-                "id": task.id,
-                "description": task.task_description,
-                "status": task.task_status
-            }
-            for task in tasks
-        ]
-
-        return Response(data)
-    
 
 class CompleteTask(APIView):
     authentication_classes = [PortalUserJWTAuthentication]
@@ -150,7 +148,7 @@ class CompleteTask(APIView):
         except Tasks.DoesNotExist:
             return Response({"error": "Task not found"}, status=404)
 
-        # Optional: prevent re-completing
+        
         if task.task_status == 'TASK_STATUS_COMPLETED':
             return Response({"message": "Task already completed"})
 
