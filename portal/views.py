@@ -2,8 +2,8 @@
 from .models import PortalUser, Tasks
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.generics import ListCreateAPIView, ListAPIView,CreateAPIView
-from .serializers import RegistrationSerializers, LoginSerializer, TaskSerializer
+from rest_framework.generics import ListCreateAPIView
+from .serializers import RegistrationSerializers, LoginSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from .authentication import PortalUserJWTAuthentication
