@@ -8,5 +8,6 @@ urlpatterns=[
     path('dashboard/',views.Dashboard.as_view()),
     path('admin/create-task/', views.CreateTask.as_view()),
 
-    path('intern/tasks/<int:task_id>/complete/', views.CompleteTask.as_view())
+    path('intern/tasks/<int:task_id>/complete/', views.CompleteTask.as_view()),
+
 ]

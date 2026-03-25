@@ -110,13 +110,13 @@ class CreateTask(APIView):
         if portal_user.role != 'USER_ADMIN':
             return Response({"error": "Access denied"})
 
-        assigned_to_id = request.data.get('assigned_to')
+        assigned_to_email = request.data.get('email')
         description = request.data.get('task_description')
 
         try:
-            intern = PortalUser.objects.get(id = assigned_to_id, role = 'USER_INTERN')
+            intern = PortalUser.objects.get(email = assigned_to_email, role = 'USER_INTERN')
         except PortalUser.DoesNotExist:
-            return Response({'error' : "Invalid Intern Id"})
+            return Response({'error' : "Invalid Intern"})
         
         task = Tasks.objects.create(
             assigned_by = portal_user,
